@@ -109,7 +109,7 @@ end
 function State.Prototype:Concat(value: string): StateObject
 	assert(type(self._value) == "string", `Expected value to be a string when calling ':Concat', instead got {type(self._value)}`)
 
-	self:Set(self._value - value)
+	self:Set(self._value .. value)
 
 	return self
 end
@@ -170,8 +170,6 @@ end
 	```
 ]]
 function State.Prototype:Observe(callbackFn: (oldValue: any, newValue: any) -> ()): RBXScriptConnection
-	task.spawn(callbackFn, self._value)
-
 	return self.Changed:Connect(callbackFn)
 end
 
