@@ -1,6 +1,6 @@
 [package]
 name = "4x8matrix/state"
-version = "1.1.0"
+version = "1.1.1"
 realm = "shared"
 registry = "https://github.com/upliftgames/wally-index"
 licence = "Unlicense"
@@ -11,9 +11,9 @@ description = "A simple module to wrap around any datatype & provide an interfac
 exclude = ["**"]
 include = ["Source", "Source/*", "default.project.json", "wally.lock", "wally.toml", "LICENCE", "README.md"]
 
-[dev-dependencies]
-TestEz = "roblox/testez@0.4.1"
-EmoticonReporter = "4x8matrix/emoticon-reporter@1.0.0"
+# [dev-dependencies]
+# TestEz = "roblox/testez@0.4.1"
+# EmoticonReporter = "4x8matrix/emoticon-reporter@1.0.0"
 
 [dependencies]
 Signal = "sleitnick/signal@1.2.1"
