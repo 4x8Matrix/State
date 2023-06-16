@@ -80,7 +80,7 @@ end
 		Value:Destroy()
 	```
 ]]
-function State.Prototype:Destroy()
+function State.Prototype:Destroy(): ()
 	self._record = { }
 	self.Value = nil
 
@@ -290,7 +290,7 @@ function State.Interface.new(value: any): Types.StateObject
 		__tostring = function(object)
 			return object:ToString()
 		end,
-		
+
 	})
 
 	self.Changed = Signal.new()
