@@ -8,12 +8,12 @@ local Types = require(script.Types)
 local MAX_record_ALLOCATION = 15
 
 -- // Module
-local State = { }
+local State = {}
 
 State.Type = "State"
 
-State.Interface = { }
-State.Prototype = { }
+State.Interface = {}
+State.Prototype = {}
 
 -- // Prototype functions
 --[[
@@ -65,6 +65,29 @@ function State.Prototype:GetRecord(count: number): { any }
 end
 
 --[[
+	Safe way to remove references to the `Value` as well as removing any generated content
+
+	### Destroy
+
+	---
+	Example:
+
+	```lua
+		local Value = State.new(0)
+
+		...
+
+		Value:Destroy()
+	```
+]]
+function State.Prototype:Destroy()
+	self._record = { }
+	self.Value = nil
+
+	self.Destroyed:Fire()
+end
+
+--[[
 	Set the value of a state, when setting a state the 'Changed' signal will invoke.
 
 	### Parameters
@@ -108,7 +131,10 @@ end
 	```
 ]]
 function State.Prototype:Increment(value: number): Types.StateObject
-	assert(type(self.Value) == "number", `Expected value to be a number when calling ':Increment', instead got {type(self.Value)}`)
+	assert(
+		type(self.Value) == "number",
+		`Expected value to be a number when calling ':Increment', instead got {type(self.Value)}`
+	)
 
 	self:Set(self.Value + value)
 
@@ -129,7 +155,10 @@ end
 	```
 ]]
 function State.Prototype:Decrement(value: number): Types.StateObject
-	assert(type(self.Value) == "number", `Expected value to be a number when calling ':Decrement', instead got {type(self.Value)}`)
+	assert(
+		type(self.Value) == "number",
+		`Expected value to be a number when calling ':Decrement', instead got {type(self.Value)}`
+	)
 
 	self:Set(self.Value - value)
 
@@ -150,7 +179,10 @@ end
 	```
 ]]
 function State.Prototype:Concat(value: string): Types.StateObject
-	assert(type(self.Value) == "string", `Expected value to be a string when calling ':Concat', instead got {type(self.Value)}`)
+	assert(
+		type(self.Value) == "string",
+		`Expected value to be a string when calling ':Concat', instead got {type(self.Value)}`
+	)
 
 	self:Set(self.Value .. value)
 
@@ -173,7 +205,10 @@ end
 	```
 ]]
 function State.Prototype:Update(transform: (value: any) -> any): Types.StateObject
-	assert(type(transform) == "function", `Expected #1 parameter 'transform' to be a function when calling ':Update', instead got {type(transform)}`)
+	assert(
+		type(transform) == "function",
+		`Expected #1 parameter 'transform' to be a function when calling ':Update', instead got {type(transform)}`
+	)
 
 	self:Set(transform(self.Value))
 
@@ -254,12 +289,49 @@ function State.Interface.new(value: any): Types.StateObject
 		__index = State.Prototype,
 		__tostring = function(object)
 			return object:ToString()
-		end
+		end,
+		
 	})
 
 	self.Changed = Signal.new()
+	self.Destroyed = Signal.new()
 
 	return self
+end
+
+--[[
+	Generate a new 'value' object based off of an object's attribute
+
+	### Parameters
+	- **object**: *the object you'd like to get the attribute from*
+	- **attribute**: *the name of the attribute*
+
+	---
+	Example:
+
+	```lua
+		local object = State.fromAttribute(workspace.object, "attributeName")
+
+		...
+	```
+]]
+function State.Interface.fromAttribute(object, attribute): Types.StateObject
+	local attributeValue = object:GetAttribute(attribute)
+	local stateObject = State.Interface.new(attributeValue)
+
+	local attributeConnections = { }
+
+	table.insert(attributeConnections, object:GetAttributeChangedSignal(attribute):Connect(function()
+		stateObject:Set(object:GetAttribute(attribute))
+	end))
+
+	stateObject.Destroyed:Once(function()
+		for _, connection in attributeConnections do
+			connection:Disconnect()
+		end
+	end)
+
+	return stateObject
 end
 
 --[[

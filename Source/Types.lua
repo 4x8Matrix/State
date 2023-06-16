@@ -7,6 +7,7 @@ export type StateObject = {
 	Concat: (self: StateObject, value: string) -> StateObject,
 	Decrement: (self: StateObject, value: number) -> StateObject,
 	Increment: (self: StateObject, value: number) -> StateObject,
+	Destroy: (self: StateObject) -> (),
 
 	Changed: RBXScriptSignal
 }
@@ -14,6 +15,7 @@ export type StateObject = {
 export type StateModule = {
 	new: (value: any) -> StateObject,
 	is: (object: StateObject?) -> boolean,
+	fromAttribute: (object: Instance, attribute: string) -> StateObject
 }
 
 return { }
