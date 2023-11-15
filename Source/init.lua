@@ -1,9 +1,6 @@
 -- // External Imports
 local Signal = require(script.Parent.Signal)
 
--- // Local Imports
-local Types = require(script.Types)
-
 -- // Constants
 local MAX_record_ALLOCATION = 15
 
@@ -30,7 +27,7 @@ State.Prototype = {}
 			:SetRecordingState(true)
 	```
 ]]
-function State.Prototype:SetRecordingState(state: boolean): Types.StateObject
+function State.Prototype:SetRecordingState(state: boolean): State
 	self._recording = state
 
 	return self
@@ -102,8 +99,12 @@ end
 		Value:Set(1)
 	```
 ]]
-function State.Prototype:Set(value: any): Types.StateObject
+function State.Prototype:Set(value: any): State
 	local oldValue = self.Value
+
+	if oldValue == value then
+		return self
+	end
 
 	if self._recording then
 		table.insert(self._record, 1, value)
@@ -115,6 +116,8 @@ function State.Prototype:Set(value: any): Types.StateObject
 
 	self.Value = value
 	self.Changed:Fire(oldValue, value)
+
+	return self
 end
 
 --[[
@@ -130,7 +133,7 @@ end
 		print(value:Get()) -- 10
 	```
 ]]
-function State.Prototype:Increment(value: number): Types.StateObject
+function State.Prototype:Increment(value: number): State
 	assert(
 		type(self.Value) == "number",
 		`Expected value to be a number when calling ':Increment', instead got {type(self.Value)}`
@@ -154,7 +157,7 @@ end
 		print(value:Get()) -- 5
 	```
 ]]
-function State.Prototype:Decrement(value: number): Types.StateObject
+function State.Prototype:Decrement(value: number): State
 	assert(
 		type(self.Value) == "number",
 		`Expected value to be a number when calling ':Decrement', instead got {type(self.Value)}`
@@ -178,7 +181,7 @@ end
 		print(value:Get()) -- Hello World!
 	```
 ]]
-function State.Prototype:Concat(value: string): Types.StateObject
+function State.Prototype:Concat(value: string): State
 	assert(
 		type(self.Value) == "string",
 		`Expected value to be a string when calling ':Concat', instead got {type(self.Value)}`
@@ -204,7 +207,7 @@ end
 		print(value:Get()) -- Hello World!
 	```
 ]]
-function State.Prototype:Update(transform: (value: any) -> any): Types.StateObject
+function State.Prototype:Update(transform: (value: any) -> any): State
 	assert(
 		type(transform) == "function",
 		`Expected #1 parameter 'transform' to be a function when calling ':Update', instead got {type(transform)}`
@@ -283,7 +286,7 @@ end
 		...
 	```
 ]]
-function State.Interface.new(value: any): Types.StateObject
+function State.Interface.new(value: any): State
 	local self = setmetatable({ Value = value, _record = { value } }, {
 		__type = State.Type,
 		__index = State.Prototype,
@@ -315,7 +318,7 @@ end
 		...
 	```
 ]]
-function State.Interface.fromAttribute(object, attribute): Types.StateObject
+function State.Interface.fromAttribute(object, attribute): State
 	local attributeValue = object:GetAttribute(attribute)
 	local stateObject = State.Interface.new(attributeValue)
 
@@ -351,7 +354,7 @@ end
 		end
 	```
 ]]
-function State.Interface.is(object: Types.StateObject?): boolean
+function State.Interface.is(object: State?): boolean
 	if not object or type(object) ~= "table" then
 		return false
 	end
@@ -361,4 +364,6 @@ function State.Interface.is(object: Types.StateObject?): boolean
 	return metatable and metatable.__type == State.Type
 end
 
-return State.Interface :: Types.StateModule
+export type State = typeof(State.Prototype)
+
+return State.Interface
